@@ -1,0 +1,8 @@
+[network]
+configured = false
+wan_interface = ""
+lan_interfaces = []
+
+[system]
+web_port = 8080
+hostname = "JosdorOS"
