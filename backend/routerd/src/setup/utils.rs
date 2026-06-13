@@ -1,5 +1,6 @@
 use toml_edit::{DocumentMut, value};
 use std::fs;
+use network_interface::{NetworkInterface, NetworkInterfaceConfig};
 
 pub fn update_config_file(section: &str, key: &str, new_value: &str) -> Result<(), Box<dyn std::error::Error>> {
 
@@ -23,4 +24,14 @@ pub fn update_config_file(section: &str, key: &str, new_value: &str) -> Result<(
     fs::write("/etc/josdorOS/config.toml", doc.to_string())?;
 
     Ok(())
+}
+
+pub fn get_network_interfaces() -> Vec<String> {
+
+    let interfaces = NetworkInterface::show().expect("Failed to get network interfaces");
+
+    interfaces.into_iter().map(|iface| iface.name).filter(|name| {
+        name != "lo" && !name.starts_with("docker") && !name.starts_with("veth") && !name.starts_with("virbr") && !name.starts_with("br-") && !name.starts_with("tun") // Filter
+    }).collect()
+
 }
