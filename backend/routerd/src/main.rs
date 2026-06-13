@@ -1,13 +1,13 @@
 mod api;
 mod setup;
 
-use api::startAPI;
-
 #[tokio::main]
 async fn main() {
     println!("Welcome to JosdorOS Router Daemon!");
-    setup::init();
+    setup::boot();
 
     println!("Starting API server...");
-    api::startAPI().await;
+
+    api::start_api().await;
+
 }
