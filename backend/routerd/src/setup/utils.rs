@@ -1,10 +1,29 @@
-use toml_edit::{DocumentMut, value};
+use toml_edit::{value, Array, DocumentMut, Item};
 use std::fs;
 use network_interface::{NetworkInterface, NetworkInterfaceConfig};
 use std::process::Command;
+use serde::{Deserialize, Serialize};
 
 
-pub fn update_config_file(section: &str, key: &str, new_value: &str) -> Result<(), Box<dyn std::error::Error>> {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct NConfig {
+    pub network: NetworkConfig,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct NetworkConfig {
+    pub configured: bool,
+    pub wan_interface: String,
+    pub lan_interfaces: Vec<String>,
+}
+
+pub enum ConfigValue {
+    String(String),
+    Bool(bool),
+    Array(Vec<String>),
+}
+
+pub fn update_config_file( section: &str, key: &str, new_value: ConfigValue ) -> Result<(), Box<dyn std::error::Error>> {
 
     let content = fs::read_to_string("/etc/josdorOS/config.toml")?;
     let mut doc = content.parse::<DocumentMut>()?;
@@ -18,12 +37,38 @@ pub fn update_config_file(section: &str, key: &str, new_value: &str) -> Result<(
         .ok_or(format!("[{}] is not a TOML table", section))?;
 
     if !section_table.contains_key(key) {
-        return Err(format!("Key [{}] missing in section [{}]", key, section).into());
+        return Err(
+            format!(
+                "Key [{}] missing in section [{}]",
+                key,
+                section
+            )
+                .into(),
+        );
     }
 
-    section_table[key] = value(new_value);
+    let item: Item = match new_value {
+        ConfigValue::String(v) => value(v),
 
-    fs::write("/etc/josdorOS/config.toml", doc.to_string())?;
+        ConfigValue::Bool(v) => value(v),
+
+        ConfigValue::Array(values) => {
+            let mut arr = Array::default();
+
+            for v in values {
+                arr.push(v);
+            }
+
+            value(arr)
+        }
+    };
+
+    section_table[key] = item;
+
+    fs::write(
+        "/etc/josdorOS/config.toml",
+        doc.to_string(),
+    )?;
 
     Ok(())
 }
@@ -45,8 +90,15 @@ pub async fn set_hostname(hostname: &str) -> Result<(), Box<dyn std::error::Erro
     if out.is_err() {
         return Err(out.unwrap_err().into());
     }
-    
-    update_config_file("system", "hostname", &hostname)?;
+
+    update_config_file("system", "hostname", ConfigValue::String(hostname.into()))?;
 
     Ok(())
+}
+
+pub fn load_config() -> NConfig {
+
+    let content = fs::read_to_string("/etc/josdorOS/config.toml").expect("Failed to read config file");
+
+    toml::from_str(&content).expect("Failed to parse config file")
 }
