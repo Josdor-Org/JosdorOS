@@ -36,6 +36,7 @@ pub async fn configure_network (wan_interface: String, lan_interfaces: Vec<Strin
     
     update_config_file("network", "wan_interface", &wan_interface)?;
     update_config_file("network", "lan_interfaces", &lan_array.to_string())?;
+    update_config_file("network", "configured", "true");
 
     Ok(())
 }
