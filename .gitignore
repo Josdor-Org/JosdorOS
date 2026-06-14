@@ -1,2 +1,3 @@
 .vscode
-backend/routerd/target
+backend/routerd/target/*
+.idea

@@ -1,6 +1,8 @@
 use toml_edit::{DocumentMut, value};
 use std::fs;
 use network_interface::{NetworkInterface, NetworkInterfaceConfig};
+use std::process::Command;
+
 
 pub fn update_config_file(section: &str, key: &str, new_value: &str) -> Result<(), Box<dyn std::error::Error>> {
 
@@ -34,4 +36,17 @@ pub fn get_network_interfaces() -> Vec<String> {
         name != "lo" && !name.starts_with("docker") && !name.starts_with("veth") && !name.starts_with("virbr") && !name.starts_with("br-") && !name.starts_with("tun") // Filter
     }).collect()
 
+}
+
+pub async fn set_hostname(hostname: &str) -> Result<(), Box<dyn std::error::Error>> {
+
+    let out = Command::new("hostnamectl").arg("set-hostname").arg(hostname).status();
+
+    if out.is_err() {
+        return Err(out.unwrap_err().into());
+    }
+    
+    update_config_file("system", "hostname", &hostname)?;
+
+    Ok(())
 }

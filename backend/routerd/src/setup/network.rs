@@ -2,7 +2,7 @@ use std::error::Error;
 use toml_edit::{Array};
 use crate::setup::utils::{update_config_file, get_network_interfaces};
 
-pub async fn configure_network(hostname: String, wan_interface: String, lan_interfaces: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub async fn configure_network (wan_interface: String, lan_interfaces: Vec<String>) -> Result<(), Box<dyn Error>> {
 
     // Check that all given interfaces exist on the host
     let interfaces = get_network_interfaces();
@@ -33,8 +33,7 @@ pub async fn configure_network(hostname: String, wan_interface: String, lan_inte
     for interface in lan_interfaces {
         lan_array.push(interface);
     }
-
-    update_config_file("system", "hostname", &hostname)?;
+    
     update_config_file("network", "wan_interface", &wan_interface)?;
     update_config_file("network", "lan_interfaces", &lan_array.to_string())?;
 
