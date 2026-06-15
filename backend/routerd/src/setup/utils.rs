@@ -4,7 +4,6 @@ use network_interface::{NetworkInterface, NetworkInterfaceConfig};
 use std::process::Command;
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NConfig {
     pub network: NetworkConfig,
@@ -101,4 +100,33 @@ pub fn load_config() -> NConfig {
     let content = fs::read_to_string("/etc/josdorOS/config.toml").expect("Failed to read config file");
 
     toml::from_str(&content).expect("Failed to parse config file")
+}
+
+fn apt_update()-> Result<(), Box<dyn std::error::Error>> {
+
+    Command::new("sudo").arg("apt").arg("update").status()?;
+    Ok(())
+}
+
+pub fn install_dns_server(lan_interface: &str) -> Result<(), Box<dyn std::error::Error>> {
+
+    let config = format!(
+        r#"interface={}
+bind-interfaces
+dhcp-range=10.10.0.50,10.10.0.200,12h
+dhcp-option=3,10.10.0.1
+dhcp-option=6,1.1.1.1,8.8.8.8
+"#,
+        lan_interface
+    );
+
+    apt_update()?;
+    Command::new("sudo").args(&["apt", "install", "dnsmasq", "-y"]).status()?;
+
+    fs::write("/etc/dnsmasq.d/josdor.conf", config)?;
+
+    Command::new("systemctl").args(["restart", "dnsmasq"]).status()?;
+    Command::new("systemctl").args(["enable", "dnsmasq"]).status()?;
+
+    Ok(())
 }

@@ -1,5 +1,6 @@
 mod api;
 mod setup;
+mod nftables;
 
 #[tokio::main]
 async fn main() {
