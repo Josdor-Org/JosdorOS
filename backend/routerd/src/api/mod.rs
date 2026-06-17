@@ -12,7 +12,8 @@ pub async fn start_api(){
         .route("/api/health", get(health::health))
         .route("/api/hostname", get(monitoring::hostname))
         .route("/api/setup", post(setup::setup_network))
-        .route("/api/network/config", get(network::config::get_network_config));
+        .route("/api/network/config", get(network::config::get_network_config))
+        .route("/api/network/config/interfaces", get(network::config::get_network_interfaces_infos));
 
     let listener = TcpListener::bind("0.0.0.0:8080").await.unwrap();
 

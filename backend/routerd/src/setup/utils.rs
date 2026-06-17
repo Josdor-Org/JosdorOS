@@ -22,6 +22,14 @@ pub enum ConfigValue {
     Array(Vec<String>),
 }
 
+#[derive(Serialize)]
+pub struct InterfaceInfo {
+    pub name: String,
+    pub mac: String,
+    pub speed: Option<u32>,
+    pub state: String,
+}
+
 pub fn update_config_file( section: &str, key: &str, new_value: ConfigValue ) -> Result<(), Box<dyn std::error::Error>> {
 
     let content = fs::read_to_string("/etc/josdorOS/config.toml")?;
@@ -82,6 +90,28 @@ pub fn get_network_interfaces() -> Vec<String> {
 
 }
 
+pub fn get_network_interfaces_all_infos() -> Vec<InterfaceInfo> {
+    let interfaces = get_network_interfaces();
+
+    let mut result: Vec<InterfaceInfo> = Vec::new();
+
+    for interface in &interfaces {
+        let speed = fs::read_to_string(format!("/sys/class/net/{}/speed", interface)).ok().and_then(|s| s.trim().parse::<u32>().ok());
+
+        let state = fs::read_to_string(format!("/sys/class/net/{}/operstate", interface)).unwrap_or_else(|_| "unknown".to_string()).trim().to_string();
+
+        let mac = fs::read_to_string(format!("/sys/class/net/{}/address", interface)).unwrap_or_else(|_| "unknown".to_string()).trim().to_string();
+
+        result.push(InterfaceInfo {
+            name: interface.clone(),
+            mac,
+            speed,
+            state,
+        });
+    }
+    result
+}
+
 pub async fn set_hostname(hostname: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let out = Command::new("hostnamectl").arg("set-hostname").arg(hostname).status();
@@ -109,7 +139,6 @@ fn apt_update()-> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn install_dns_server(lan_interface: &str) -> Result<(), Box<dyn std::error::Error>> {
-
     let config = format!(
         r#"interface={}
 bind-interfaces
