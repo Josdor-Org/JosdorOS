@@ -1,6 +1,8 @@
 use std::process::Command;
 use crate::setup::config::create_config;
 use nix::unistd::Uid;
+use setup::utils::install_lshw;
+use crate::setup;
 
 fn check_root() {
     if !Uid::effective().is_root() {
@@ -25,4 +27,7 @@ pub fn boot() {
     } else {
         println!("Configuration file already exists at /etc/josdorOS/config.toml. Booting with existing configuration... ");
     }
+    
+    println!("Installing mandatory firmware versions...");
+    install_lshw().expect("Failed to install lshw");
 }

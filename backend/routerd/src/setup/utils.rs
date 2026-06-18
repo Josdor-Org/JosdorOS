@@ -22,12 +22,22 @@ pub enum ConfigValue {
     Array(Vec<String>),
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct InterfaceInfo {
     pub name: String,
+    pub vendor: Option<String>,
+    pub model: Option<String>,
     pub mac: String,
     pub speed: Option<u32>,
     pub state: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct LshwInterface {
+    logicalname: Option<String>,
+    vendor: Option<String>,
+    product: Option<String>,
+    serial: Option<String>,
 }
 
 pub fn update_config_file( section: &str, key: &str, new_value: ConfigValue ) -> Result<(), Box<dyn std::error::Error>> {
@@ -90,25 +100,58 @@ pub fn get_network_interfaces() -> Vec<String> {
 
 }
 
+fn get_lshw_interfaces() -> Vec<LshwInterface> {
+    let output = Command::new("lshw").args(["-class", "network", "-json"]).output().expect("Failed to run lshw");
+
+    let json = String::from_utf8_lossy(&output.stdout);
+
+    serde_json::from_str(&json)
+        .unwrap_or_else(|_| Vec::new())
+}
+
 pub fn get_network_interfaces_all_infos() -> Vec<InterfaceInfo> {
+
     let interfaces = get_network_interfaces();
+    let lshw_interfaces = get_lshw_interfaces();
 
-    let mut result: Vec<InterfaceInfo> = Vec::new();
+    let mut result = Vec::new();
 
-    for interface in &interfaces {
-        let speed = fs::read_to_string(format!("/sys/class/net/{}/speed", interface)).ok().and_then(|s| s.trim().parse::<u32>().ok());
+    for interface in interfaces {
 
-        let state = fs::read_to_string(format!("/sys/class/net/{}/operstate", interface)).unwrap_or_else(|_| "unknown".to_string()).trim().to_string();
+        let speed = fs::read_to_string(
+            format!("/sys/class/net/{}/speed", interface)
+        )
+            .ok()
+            .and_then(|s| s.trim().parse::<u32>().ok());
 
-        let mac = fs::read_to_string(format!("/sys/class/net/{}/address", interface)).unwrap_or_else(|_| "unknown".to_string()).trim().to_string();
+        let state = fs::read_to_string(
+            format!("/sys/class/net/{}/operstate", interface)
+        )
+            .unwrap_or_else(|_| "unknown".to_string())
+            .trim()
+            .to_string();
+
+        let mac = fs::read_to_string(
+            format!("/sys/class/net/{}/address", interface)
+        )
+            .unwrap_or_else(|_| "unknown".to_string())
+            .trim()
+            .to_string();
+
+        let hw = lshw_interfaces
+            .iter()
+            .find(|i| i.logicalname.as_deref() == Some(interface.as_str()));
 
         result.push(InterfaceInfo {
-            name: interface.clone(),
+            name: interface,
+            vendor: hw.and_then(|i| i.vendor.clone()),
+            model: hw.and_then(|i| i.product.clone()),
             mac,
             speed,
             state,
         });
     }
+
     result
 }
 
@@ -157,5 +200,13 @@ dhcp-option=6,1.1.1.1,8.8.8.8
     Command::new("systemctl").args(["restart", "dnsmasq"]).status()?;
     Command::new("systemctl").args(["enable", "dnsmasq"]).status()?;
 
+    Ok(())
+}
+
+pub fn install_lshw() -> Result<(), Box<dyn std::error::Error>> {
+    
+    apt_update()?;
+    let out = Command::new("sudo").args(&["apt", "install", "lshw", "-y"]).status()?;
+    
     Ok(())
 }
