@@ -14,6 +14,10 @@ pub struct NetworkConfig {
     pub configured: bool,
     pub wan_interface: String,
     pub lan_interfaces: Vec<String>,
+    pub dhcp_ip_range_start : String,
+    pub dhcp_ip_range_end : String,
+    pub dhcp_forwarding_ip: String,
+    pub lease : String
 }
 
 pub enum ConfigValue {
@@ -181,15 +185,19 @@ fn apt_update()-> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn install_dns_server(lan_interface: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_dhcp_server(lan_interface: &str, ip_range_start: &str, ip_range_end: &str, forwarding_ip : &str, lease: &str) -> Result<(), Box<dyn std::error::Error>> {
     let config = format!(
         r#"interface={}
 bind-interfaces
-dhcp-range=10.10.0.50,10.10.0.200,12h
-dhcp-option=3,10.10.0.1
+dhcp-range={},{},{}
+dhcp-option=3,{}
 dhcp-option=6,1.1.1.1,8.8.8.8
 "#,
-        lan_interface
+        lan_interface,
+        ip_range_start,
+        ip_range_end,
+        lease,
+        forwarding_ip,
     );
 
     apt_update()?;

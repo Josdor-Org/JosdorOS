@@ -1,9 +1,9 @@
 use std::error::Error;
 use crate::nftables::config::configure_nat;
 use crate::setup::config::{configure_lan_ip, enable_ip_forwarding};
-use crate::setup::utils::{update_config_file, get_network_interfaces, ConfigValue, install_dns_server};
+use crate::setup::utils::{update_config_file, get_network_interfaces, ConfigValue, install_dhcp_server};
 
-pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<String>, ) -> Result<(), Box<dyn Error>> {
+pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<String>, dhcp_ip_range_start: String, dhcp_ip_range_end: String, dhcp_forwarding_ip : String, dhcp_lease: String ) -> Result<(), Box<dyn Error>> {
 
     // Check that all given interfaces exist on the host
     let interfaces = get_network_interfaces();
@@ -28,13 +28,20 @@ pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<Strin
         return Err ("WAN interface cannot also be a LAN interface.".into() );
     }
 
-    // Save interfaces to config
+    // Save interfaces to config file
     update_config_file("network", "wan_interface", ConfigValue::String(wan_interface.clone()))?;
     update_config_file("network", "lan_interfaces", ConfigValue::Array(lan_interfaces.clone()))?;
     update_config_file("network", "configured", ConfigValue::Bool(true) )?;
 
+    // Save DHCP config to config file
+    update_config_file("dhcp", "enabled", ConfigValue::Bool(true))?;
+    update_config_file("dhcp", "ip_range_start", ConfigValue::String(dhcp_ip_range_start.clone()))?;
+    update_config_file("dhcp", "ip_range_end", ConfigValue::String(dhcp_ip_range_end.clone()))?;
+    update_config_file("dhcp", "forwarding_ip", ConfigValue::String(dhcp_forwarding_ip.clone()))?;
+    update_config_file("dhcp", "lease", ConfigValue::String(dhcp_lease.clone()))?;
+
     apply_basic_routing(&wan_interface, &lan_interfaces)?;
-    install_dns_server(&lan_interfaces[0])?;
+    install_dhcp_server(&lan_interfaces[0], dhcp_ip_range_start.as_str(), dhcp_ip_range_end.as_str(), dhcp_forwarding_ip.as_str(), dhcp_lease.as_str())?;
 
     Ok(())
 }
