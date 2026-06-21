@@ -1,0 +1,11 @@
+=====================================
+        JosdorOS Router Alpha
+=====================================
+
+Management API:
+http://<router-ip>:8080
+
+Version: 0.1-Alpha
+
+Powered by Debian
+Made by Dorian Figueiras : github.com/dorianFGR

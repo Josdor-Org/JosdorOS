@@ -1,0 +1,5 @@
+dnsmasq
+nftables
+curl
+ethtool
+lshw

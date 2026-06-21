@@ -1,0 +1,15 @@
+[network]
+configured = false
+wan_interface = ""
+lan_interfaces = []
+
+[dhcp]
+enabled = false
+ip_range_start = "10.0.0.10"
+ip_range_end = "10.0.0.150"
+forwarding_ip = "10.0.0.1"
+lease = "12h" # String, examples : 12 hours = 12h / 2 days = 2d
+
+[system]
+web_port = 8080
+hostname = "JosdorOS"
