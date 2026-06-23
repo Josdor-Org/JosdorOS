@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NConfig {
     pub network: NetworkConfig,
+    pub dhcp: DHCPConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -14,9 +15,14 @@ pub struct NetworkConfig {
     pub configured: bool,
     pub wan_interface: String,
     pub lan_interfaces: Vec<String>,
-    pub dhcp_ip_range_start : String,
-    pub dhcp_ip_range_end : String,
-    pub dhcp_forwarding_ip: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct DHCPConfig {
+    pub enabled: bool,
+    pub ip_range_start : String,
+    pub ip_range_end : String,
+    pub forwarding_ip: String,
     pub lease : String
 }
 
@@ -41,7 +47,6 @@ struct LshwInterface {
     logicalname: Option<String>,
     vendor: Option<String>,
     product: Option<String>,
-    serial: Option<String>,
 }
 
 pub fn update_config_file( section: &str, key: &str, new_value: ConfigValue ) -> Result<(), Box<dyn std::error::Error>> {
@@ -214,7 +219,7 @@ dhcp-option=6,1.1.1.1,8.8.8.8
 pub fn install_lshw() -> Result<(), Box<dyn std::error::Error>> {
     
     apt_update()?;
-    let out = Command::new("sudo").args(&["apt", "install", "lshw", "-y"]).status()?;
+    let _out = Command::new("sudo").args(&["apt", "install", "lshw", "-y"]).status()?;
     
     Ok(())
 }

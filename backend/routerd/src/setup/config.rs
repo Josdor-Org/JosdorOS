@@ -1,6 +1,8 @@
 use std::process::Command;
 use std::path::Path;
 use std::fs;
+use crate::setup::network::apply_basic_routing;
+use crate::setup::utils::load_config;
 
 const CONFIG_DIR: &str = "/etc/josdorOS";
 const CONFIG_PATH: &str = "/etc/josdorOS/config.toml";
@@ -33,5 +35,14 @@ pub fn configure_lan_ip(lan_interface: &str) -> Result<(), Box<dyn std::error::E
     Command::new("ip").args(["addr", "add", "10.10.0.1/24", "dev", lan_interface]).status()?;
     Command::new("ip").args(["link", "set", lan_interface, "up"]).status()?;
 
+    Ok(())
+}
+
+pub fn load_from_existing_config() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Configuration file already exists at /etc/josdorOS/config.toml. Booting with existing configuration... ");
+    
+    let config = load_config();
+    
+    apply_basic_routing(&config.network.wan_interface, &*config.network.lan_interfaces).expect("Failed to apply basic routing, check the config file.");
     Ok(())
 }

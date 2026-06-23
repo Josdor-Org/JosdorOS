@@ -1,5 +1,5 @@
 use std::process::Command;
-use crate::setup::config::create_config;
+use crate::setup::config::{create_config, load_from_existing_config};
 use nix::unistd::Uid;
 use setup::utils::install_lshw;
 use crate::setup;
@@ -25,7 +25,7 @@ pub fn boot() {
     if !output.status.success() {
         create_config();
     } else {
-        println!("Configuration file already exists at /etc/josdorOS/config.toml. Booting with existing configuration... ");
+        load_from_existing_config().expect("Failed to apply basic routing, check the config file.");
     }
     
     println!("Installing mandatory firmware versions...");
