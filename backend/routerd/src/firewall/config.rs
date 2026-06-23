@@ -123,3 +123,21 @@ table inet filter {
 
     Ok(())
 }
+
+pub async fn delete_firewall_rule(name: &str) -> Result<(), Box<dyn Error>> {
+    
+    let content = fs::read_to_string("/etc/josdorOS/config.toml")?;
+    let mut doc = content.parse::<DocumentMut>()?;
+
+    let rules = doc["firewall"]["rules"].as_array_of_tables_mut().ok_or("No firewall rules found")?;
+
+    let pos = rules.iter().position(|rule| rule["name"].as_str() == Some(name));
+
+    if let Some(pos) = pos {
+        rules.remove(pos);
+    }
+
+    fs::write("/etc/josdorOS/config.toml", doc.to_string())?;
+
+    Ok(())
+}
