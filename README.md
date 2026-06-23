@@ -80,6 +80,10 @@ I recommend using a software like Proxmox but if you don't have a server at home
 <img width="1109" height="581" alt="image" src="https://github.com/user-attachments/assets/1095aefe-0e63-49e9-84c7-f8fdd7b673d1" />
 
 
+- Create a 2nd vm with only the virtual interface ( it should not connect to your network ) i recommend using a linux distro
+- start the 1st vm and boot on the iso file. When booted, just type "ip a" command to get the interfaces. The 1st interface shown should have an ip adress, take it in note. Also take in note of the name of the two interfaces ( ex : ens18 and ens19 )
+
+
 ### JosdorOS quick setup : 
 
 I recommend using Postman for the next step
@@ -101,6 +105,7 @@ I recommend using Postman for the next step
 
 - If everything OK you will get this response : 'Network setup completed successfully' if not double-check the parameters.
 
+
 <img width="1956" height="1374" alt="image" src="https://github.com/user-attachments/assets/f02b3dad-7782-43be-8abd-239e8502005c" />
 
 
@@ -110,3 +115,9 @@ I recommend using Postman for the next step
 - Now, you get a Lan IPv4 and you can try to ping the gateway : "ping 10.10.0.1" or directly a domain name : "ping google.com"
 
 <img width="1142" height="565" alt="image" src="https://github.com/user-attachments/assets/befcb56c-e2ed-4154-937f-ec3dcd283179" />
+
+### Try if everything working
+
+- you can start the 2nd vm and type command "ip a" again and you will normally see 1 interface with an ip, if this interface doesn't have an ip try 'sudo systemctl restart NetworkManager" or "dhclient" it will ask for a new ip to the DHCP server.
+- Now, you get a Lan IPv4 and you can try to ping the gateway : "ping 10.10.0.1" or directly a domain name : "ping google.com"
+

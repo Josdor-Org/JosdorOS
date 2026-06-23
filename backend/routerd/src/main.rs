@@ -1,6 +1,6 @@
 mod api;
 mod setup;
-mod nftables;
+mod firewall;
 
 #[tokio::main]
 async fn main() {

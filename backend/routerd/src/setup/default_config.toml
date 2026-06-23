@@ -13,3 +13,6 @@ lease = "12h" # String, examples : 12 hours = 12h / 2 days = 2d
 [system]
 web_port = 8080
 hostname = "JosdorOS"
+
+[firewall]
+enabled = false

@@ -184,7 +184,7 @@ pub fn load_config() -> NConfig {
     toml::from_str(&content).expect("Failed to parse config file")
 }
 
-fn apt_update()-> Result<(), Box<dyn std::error::Error>> {
+pub fn apt_update()-> Result<(), Box<dyn std::error::Error>> {
 
     Command::new("sudo").arg("apt").arg("update").status()?;
     Ok(())

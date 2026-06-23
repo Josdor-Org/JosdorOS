@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::nftables::config::configure_nat;
+use crate::firewall::config::configure_nat;
 use crate::setup::config::{configure_lan_ip, enable_ip_forwarding};
 use crate::setup::utils::{update_config_file, get_network_interfaces, ConfigValue, install_dhcp_server};
 
