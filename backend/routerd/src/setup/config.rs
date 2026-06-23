@@ -40,9 +40,9 @@ pub fn configure_lan_ip(lan_interface: &str) -> Result<(), Box<dyn std::error::E
 
 pub fn load_from_existing_config() -> Result<(), Box<dyn std::error::Error>> {
     println!("Configuration file already exists at /etc/josdorOS/config.toml. Booting with existing configuration... ");
-    
+
     let config = load_config();
-    
-    apply_basic_routing(&config.network.wan_interface, &*config.network.lan_interfaces).expect("Failed to apply basic routing, check the config file.");
+
+    apply_basic_routing(&*config.network.lan_interfaces).expect("Failed to apply basic routing, check the config file.");
     Ok(())
 }

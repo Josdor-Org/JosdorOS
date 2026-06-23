@@ -3,11 +3,13 @@ use std::fs;
 use network_interface::{NetworkInterface, NetworkInterfaceConfig};
 use std::process::Command;
 use serde::{Deserialize, Serialize};
+use crate::firewall::config::FirewallConfig;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NConfig {
     pub network: NetworkConfig,
     pub dhcp: DHCPConfig,
+    pub firewall: FirewallConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

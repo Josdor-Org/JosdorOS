@@ -1,5 +1,4 @@
 use std::error::Error;
-use crate::firewall::config::configure_nat;
 use crate::setup::config::{configure_lan_ip, enable_ip_forwarding};
 use crate::setup::utils::{update_config_file, get_network_interfaces, ConfigValue, install_dhcp_server};
 
@@ -40,18 +39,17 @@ pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<Strin
     update_config_file("dhcp", "forwarding_ip", ConfigValue::String(dhcp_forwarding_ip.clone()))?;
     update_config_file("dhcp", "lease", ConfigValue::String(dhcp_lease.clone()))?;
 
-    apply_basic_routing(&wan_interface, &lan_interfaces)?;
+    apply_basic_routing(&lan_interfaces)?;
     install_dhcp_server(&lan_interfaces[0], dhcp_ip_range_start.as_str(), dhcp_ip_range_end.as_str(), dhcp_forwarding_ip.as_str(), dhcp_lease.as_str())?;
 
     Ok(())
 }
 
-pub fn apply_basic_routing (wan_interface: &str, lan_interfaces: &[String]) -> Result<(), Box<dyn Error>> {
+pub fn apply_basic_routing (lan_interfaces: &[String]) -> Result<(), Box<dyn Error>> {
     let lan = lan_interfaces.first().ok_or("No LAN interface configured")?;
 
     enable_ip_forwarding()?;
     configure_lan_ip(lan)?;
-    configure_nat(wan_interface)?;
 
     Ok(())
 }
