@@ -1,6 +1,7 @@
 use std::process::Command;
 use std::path::Path;
 use std::fs;
+use crate::firewall::config::apply_nftables;
 use crate::setup::network::apply_basic_routing;
 use crate::setup::utils::load_config;
 
@@ -29,12 +30,21 @@ pub fn enable_ip_forwarding() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn configure_lan_ip(lan_interface: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn configure_lan_bridge(lan_interfaces: Vec<String>, lan_ip: &str) -> Result<(), Box<dyn std::error::Error>> {
 
-    Command::new("ip").args(["addr", "flush", "dev", lan_interface]).status()?;
-    Command::new("ip").args(["addr", "add", "10.10.0.1/24", "dev", lan_interface]).status()?;
-    Command::new("ip").args(["link", "set", lan_interface, "up"]).status()?;
+    Command::new("ip").args(["link", "del", "br-lan"]).status()?;
+    Command::new("ip").args(["link", "add", "br-lan", "type", "bridge"]).status()?;
 
+    for interface in lan_interfaces{
+        Command::new("ip").args(["addr", "flush", "dev", interface.as_str()]).status()?;
+        Command::new("ip").args(["link", "set", interface.as_str(), "master", "br-lan"]).status()?;
+        Command::new("ip").args(["link", "set", interface.as_str(), "up"]).status()?;
+        println!("{}", interface)
+    }
+    
+    Command::new("ip").args(["addr", "flush", "dev", "br-lan"]).status()?;
+    Command::new("ip").args(["link", "set", "br-lan", "up"]).status()?;
+    Command::new("ip").args(["addr", "add", lan_ip, "dev", "br-lan"]).status()?;
     Ok(())
 }
 
@@ -43,6 +53,7 @@ pub fn load_from_existing_config() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = load_config();
 
-    apply_basic_routing(&*config.network.lan_interfaces).expect("Failed to apply basic routing, check the config file.");
+    apply_basic_routing(&*config.network.lan_interfaces, config.dhcp.mask).expect("Failed to apply basic routing, check the config file.");
+    apply_nftables().expect("Failed to apply nftables");
     Ok(())
 }

@@ -1,8 +1,9 @@
 use std::error::Error;
-use crate::setup::config::{configure_lan_ip, enable_ip_forwarding};
-use crate::setup::utils::{update_config_file, get_network_interfaces, ConfigValue, install_dhcp_server};
+use crate::firewall::config::apply_nftables;
+use crate::setup::config::{configure_lan_bridge, enable_ip_forwarding};
+use crate::setup::utils::{update_config_file, get_network_interfaces, ConfigValue, install_dhcp_server, mask_to_cidr};
 
-pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<String>, dhcp_ip_range_start: String, dhcp_ip_range_end: String, dhcp_forwarding_ip : String, dhcp_lease: String ) -> Result<(), Box<dyn Error>> {
+pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<String>, dhcp_ip_range_start: String, dhcp_ip_range_end: String, forwarding_ip : String, dhcp_lease: String, mask: String ) -> Result<(), Box<dyn Error>> {
 
     // Check that all given interfaces exist on the host
     let interfaces = get_network_interfaces();
@@ -36,20 +37,25 @@ pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<Strin
     update_config_file("dhcp", "enabled", ConfigValue::Bool(true))?;
     update_config_file("dhcp", "ip_range_start", ConfigValue::String(dhcp_ip_range_start.clone()))?;
     update_config_file("dhcp", "ip_range_end", ConfigValue::String(dhcp_ip_range_end.clone()))?;
-    update_config_file("dhcp", "forwarding_ip", ConfigValue::String(dhcp_forwarding_ip.clone()))?;
+    update_config_file("dhcp", "forwarding_ip", ConfigValue::String(forwarding_ip.clone()))?;
     update_config_file("dhcp", "lease", ConfigValue::String(dhcp_lease.clone()))?;
+    update_config_file("dhcp", "mask", ConfigValue::String(mask.clone()))?;
 
-    apply_basic_routing(&lan_interfaces)?;
-    install_dhcp_server(&lan_interfaces[0], dhcp_ip_range_start.as_str(), dhcp_ip_range_end.as_str(), dhcp_forwarding_ip.as_str(), dhcp_lease.as_str())?;
+    let cidr = mask_to_cidr(&mask);
+    let ip_with_cidr = format!("{}/{}", forwarding_ip, cidr);
+
+    println!("{}", ip_with_cidr);
+    apply_basic_routing(&lan_interfaces, ip_with_cidr)?;
+    install_dhcp_server(dhcp_ip_range_start.as_str(), dhcp_ip_range_end.as_str(), forwarding_ip.as_str(), dhcp_lease.as_str())?;
 
     Ok(())
 }
 
-pub fn apply_basic_routing (lan_interfaces: &[String]) -> Result<(), Box<dyn Error>> {
-    let lan = lan_interfaces.first().ok_or("No LAN interface configured")?;
+pub fn apply_basic_routing (lan_interfaces: &[String], ip_with_cidr: String) -> Result<(), Box<dyn Error>> {
 
     enable_ip_forwarding()?;
-    configure_lan_ip(lan)?;
+    configure_lan_bridge(Vec::from(lan_interfaces), &ip_with_cidr).expect("Cannot create Lan Bridge");
+    apply_nftables()?;
 
     Ok(())
 }

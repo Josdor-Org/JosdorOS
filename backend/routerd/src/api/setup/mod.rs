@@ -13,12 +13,13 @@ pub struct NetworkSetupRequest {
     pub dhcp_ip_range_start : String,
     pub dhcp_ip_range_end : String,
     pub dhcp_forwarding_ip : String,
-    pub dhcp_lease : String
+    pub dhcp_lease : String,
+    pub mask : String,
 }
 
 pub async fn setup_network(Json(payload): Json<NetworkSetupRequest>) -> String {
 
-    match configure_network(payload.wan_interface, payload.lan_interfaces, payload.dhcp_ip_range_start, payload.dhcp_ip_range_end, payload.dhcp_forwarding_ip, payload.dhcp_lease).await {
+    match configure_network(payload.wan_interface, payload.lan_interfaces, payload.dhcp_ip_range_start, payload.dhcp_ip_range_end, payload.dhcp_forwarding_ip, payload.dhcp_lease, payload.mask).await {
         Ok(_) => "Network setup completed successfully.".to_string(),
         Err(e) => format!("Network setup failed: {}", e),
     };

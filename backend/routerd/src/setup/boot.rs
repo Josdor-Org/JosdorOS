@@ -2,7 +2,7 @@ use std::process::Command;
 use crate::setup::config::{create_config, load_from_existing_config};
 use nix::unistd::Uid;
 use setup::utils::install_lshw;
-use crate::firewall::config::{apply_firewall, install_nftables};
+use crate::firewall::config::install_nftables;
 use crate::setup;
 
 fn check_root() {
@@ -32,9 +32,6 @@ pub fn boot() {
     println!("Installing mandatory firmware versions...");
     install_lshw().expect("Failed to install lshw");
     install_nftables().expect("Failed to install nftables");
-
-    println!("Applying firewall rules...");
-    apply_firewall().expect("Failed to apply firewall rules");
 
     println!("Boot successfully!");
 }

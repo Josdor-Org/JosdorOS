@@ -61,13 +61,14 @@ pub async fn add_firewall_rule(name: &str, enabled: bool, source: &str, destinat
     Ok(())
 }
 
-pub fn apply_firewall() -> Result<(), Box<dyn Error>> {
+pub fn apply_nftables() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config();
 
     let mut nft = String::new();
 
-    nft.push_str(
-        r#"
+    nft.push_str(r#"#!/usr/sbin/nft -f
+flush ruleset
+
 table inet filter {
     chain input {
         type filter hook input priority 0;
@@ -75,8 +76,13 @@ table inet filter {
 
         ct state established,related accept
         iif lo accept
-"#,
-    );
+
+        tcp dport 22 accept
+        tcp dport 8080 accept
+        udp dport 67 accept
+        udp dport 53 accept
+        tcp dport 53 accept
+"#);
 
     for rule in config.firewall.rules {
         if !rule.enabled {
@@ -92,34 +98,58 @@ table inet filter {
         match rule.protocol.as_str() {
             "tcp" => {
                 if let Some(port) = rule.port {
-                    nft.push_str(
-                        format!("        tcp dport {} {}\n", port, action).as_str(),
-                    );
+                    nft.push_str(&format!("        tcp dport {} {}\n", port, action));
                 }
             }
             "udp" => {
                 if let Some(port) = rule.port {
-                    nft.push_str(
-                        format!("        udp dport {} {}\n", port, action).as_str(),
-                    );
+                    nft.push_str(&format!("        udp dport {} {}\n", port, action));
                 }
+            }
+            "icmp" => {
+                nft.push_str(&format!("        ip protocol icmp {}\n", action));
             }
             _ => {}
         }
     }
 
-    nft.push_str(
-        r#"
+    nft.push_str(r#"
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+        policy accept;
+    }
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
     }
 }
-"#,
-    );
 
-    fs::write("/etc/nftables.conf", nft)?;
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority 100;
+"#);
 
-    Command::new("nft")
+    nft.push_str(&format!(
+        "        oifname \"{}\" masquerade\n",
+        config.network.wan_interface
+    ));
+
+    nft.push_str(r#"    }
+}
+"#);
+
+    std::fs::write("/etc/nftables.conf", nft)?;
+
+    let status = std::process::Command::new("nft")
         .args(["-f", "/etc/nftables.conf"])
         .status()?;
+
+    if !status.success() {
+        return Err("failed to apply nftables config".into());
+    }
 
     Ok(())
 }

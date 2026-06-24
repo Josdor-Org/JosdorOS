@@ -25,7 +25,8 @@ pub struct DHCPConfig {
     pub ip_range_start : String,
     pub ip_range_end : String,
     pub forwarding_ip: String,
-    pub lease : String
+    pub lease : String,
+    pub mask: String,
 }
 
 pub enum ConfigValue {
@@ -192,7 +193,7 @@ pub fn apt_update()-> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn install_dhcp_server(lan_interface: &str, ip_range_start: &str, ip_range_end: &str, forwarding_ip : &str, lease: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_dhcp_server(ip_range_start: &str, ip_range_end: &str, forwarding_ip : &str, lease: &str) -> Result<(), Box<dyn std::error::Error>> {
     let config = format!(
         r#"interface={}
 bind-interfaces
@@ -200,7 +201,7 @@ dhcp-range={},{},{}
 dhcp-option=3,{}
 dhcp-option=6,1.1.1.1,8.8.8.8
 "#,
-        lan_interface,
+        "br-lan",
         ip_range_start,
         ip_range_end,
         lease,
@@ -224,4 +225,9 @@ pub fn install_lshw() -> Result<(), Box<dyn std::error::Error>> {
     let _out = Command::new("sudo").args(&["apt", "install", "lshw", "-y"]).status()?;
     
     Ok(())
+}
+
+pub fn mask_to_cidr(mask: &str) -> u32 {
+
+    mask.split('.').map(|octet| octet.parse::<u8>().unwrap().count_ones()).sum::<u32>()
 }

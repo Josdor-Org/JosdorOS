@@ -2,7 +2,7 @@ use axum::Json;
 use serde::Deserialize;
 use firewall::config::FirewallRule;
 use crate::firewall;
-use crate::firewall::config::{add_firewall_rule, apply_firewall, delete_firewall_rule, FirewallConfig};
+use crate::firewall::config::{add_firewall_rule, apply_nftables, delete_firewall_rule, FirewallConfig};
 use crate::setup::utils::load_config;
 
 
@@ -19,7 +19,7 @@ pub async fn handle_create_firewall_rule(Json(payload): Json<FirewallRule>) -> S
         Err(e) => format!("Failed to create firewall rule: {}", e)
     };
 
-    match apply_firewall() {
+    match apply_nftables() {
         Ok(_) => "Firewall rule applied".to_string(),
         Err(e) => format!("Failed to apply firewall rule: {}", e)
     }
