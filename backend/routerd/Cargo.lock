@@ -452,6 +452,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sysinfo",
+ "system",
  "tokio",
  "toml",
  "toml_edit",
@@ -613,6 +614,12 @@ dependencies = [
  "objc2-io-kit",
  "windows",
 ]
+
+[[package]]
+name = "system"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffc5f24fc5a4f364ae1dedfc6eaaea77357a3ad48afb0886d747502dbcfc18df"
 
 [[package]]
 name = "thiserror"

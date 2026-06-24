@@ -15,3 +15,4 @@ tokio = { version = "1.52.3", features = ["full"] }
 toml = "1.1.2"
 toml_edit = "0.25.12"
 tower-http = { version = "0.6.11", features = ["cors"] }
+system = "0.3.4"

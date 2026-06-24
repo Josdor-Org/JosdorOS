@@ -1,6 +1,7 @@
 mod api;
 mod setup;
 mod firewall;
+mod system;
 
 #[tokio::main]
 async fn main() {
