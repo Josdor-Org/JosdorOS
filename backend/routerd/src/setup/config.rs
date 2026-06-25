@@ -39,9 +39,8 @@ pub fn configure_lan_bridge(lan_interfaces: Vec<String>, lan_ip: &str) -> Result
         Command::new("ip").args(["addr", "flush", "dev", interface.as_str()]).status()?;
         Command::new("ip").args(["link", "set", interface.as_str(), "master", "br-lan"]).status()?;
         Command::new("ip").args(["link", "set", interface.as_str(), "up"]).status()?;
-        println!("{}", interface)
     }
-    
+
     Command::new("ip").args(["addr", "flush", "dev", "br-lan"]).status()?;
     Command::new("ip").args(["link", "set", "br-lan", "up"]).status()?;
     Command::new("ip").args(["addr", "add", lan_ip, "dev", "br-lan"]).status()?;
@@ -53,7 +52,7 @@ pub fn load_from_existing_config() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = load_config();
 
-    apply_basic_routing(&*config.network.lan_interfaces, config.dhcp.mask).expect("Failed to apply basic routing, check the config file.");
+    apply_basic_routing(&*config.network.lan_interfaces, config.dhcp.forwarding_ip).expect("Failed to apply basic routing, check the config file.");
     apply_nftables().expect("Failed to apply nftables");
     Ok(())
 }

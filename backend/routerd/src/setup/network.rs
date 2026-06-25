@@ -28,6 +28,9 @@ pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<Strin
         return Err ("WAN interface cannot also be a LAN interface.".into() );
     }
 
+    let cidr = mask_to_cidr(&mask);
+    let ip_with_cidr = format!("{}/{}", forwarding_ip, cidr);
+
     // Save interfaces to config file
     update_config_file("network", "wan_interface", ConfigValue::String(wan_interface.clone()))?;
     update_config_file("network", "lan_interfaces", ConfigValue::Array(lan_interfaces.clone()))?;
@@ -37,12 +40,9 @@ pub async fn configure_network( wan_interface: String, lan_interfaces: Vec<Strin
     update_config_file("dhcp", "enabled", ConfigValue::Bool(true))?;
     update_config_file("dhcp", "ip_range_start", ConfigValue::String(dhcp_ip_range_start.clone()))?;
     update_config_file("dhcp", "ip_range_end", ConfigValue::String(dhcp_ip_range_end.clone()))?;
-    update_config_file("dhcp", "forwarding_ip", ConfigValue::String(forwarding_ip.clone()))?;
+    update_config_file("dhcp", "forwarding_ip", ConfigValue::String(ip_with_cidr.clone()))?;
     update_config_file("dhcp", "lease", ConfigValue::String(dhcp_lease.clone()))?;
     update_config_file("dhcp", "mask", ConfigValue::String(mask.clone()))?;
-
-    let cidr = mask_to_cidr(&mask);
-    let ip_with_cidr = format!("{}/{}", forwarding_ip, cidr);
 
     println!("{}", ip_with_cidr);
     apply_basic_routing(&lan_interfaces, ip_with_cidr)?;
