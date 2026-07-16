@@ -67,7 +67,7 @@ josdorOS/
 I recommend using a software like Proxmox but if you don't have a server at home, you can try using virtualbox or vmware.
 
 - Create a 1st vm with two network interface, one who is connected to your computer network and a another one who is not connected to your network ( a virtual interface ) and boot on JosdorOS ISO
-<img width="957" height="492" alt="image" src="https://github.com/user-attachments/assets/c22ab71e-91ba-4676-b1ef-2a2385fb35a9" />
+<img width="942" height="490" alt="Capture d’écran 2026-07-16 à 23 12 52" src="https://github.com/user-attachments/assets/f73b8c8b-9b49-4702-be0b-72d29873a2ea" />
 <img width="968" height="539" alt="image" src="https://github.com/user-attachments/assets/e9ffa427-2367-4ed7-b69d-232edc67904b" />
 
 
